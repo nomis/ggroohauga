@@ -1,0 +1,3 @@
+[submodule "mcu-app"]
+	path = src/app
+	url = ../mcu-app

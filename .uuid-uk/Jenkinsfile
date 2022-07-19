@@ -1,0 +1,3 @@
+@Library("uuid") _
+
+platformioApplicationPipeline()

@@ -1,0 +1,3 @@
+[env:s2_mini]
+build_src_flags = ${env.build_src_flags}
+	-DOTA_URL="\"https://ota.test/ggroohauga/s2_mini/firmware.bin\""
