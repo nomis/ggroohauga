@@ -80,7 +80,6 @@ void Device::report() {
 		static constexpr uint8_t BYTES_PER_LINE = 16;
 		static constexpr uint8_t CHARS_PER_BYTE = 3;
 		std::array<char, CHARS_PER_BYTE * BYTES_PER_LINE + 1> message{};
-		const __FlashStringHelper *prefix = F("<-");
 		uint8_t pos = 0;
 
 		for (uint16_t i = 0; i < buffer_.size(); i++) {
@@ -88,9 +87,8 @@ void Device::report() {
 				PSTR(" %02X"), buffer_[i]);
 
 			if (pos == BYTES_PER_LINE || i == buffer_.size() - 1) {
-				logger_.trace(F("%S%s"), prefix, message.data());
+				logger_.trace(F("%s"), &message.data()[1]);
 				pos = 0;
-				prefix = F("  ");
 			}
 		}
 	}
