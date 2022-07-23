@@ -23,8 +23,8 @@
 namespace ggroohauga {
 
 App::App()
-		: con_(F("console"), con_serial_, CON_RX, CON_TX),
-		amp_(F("amplifier"), amp_serial_, AMP_RX, AMP_TX) {
+		: con_(F("console"), con_serial_, CON_RX, CON_TX, CON_DETECT, INPUT_PULLUP, CON_ANNOUNCE),
+		amp_(F("amplifier"), amp_serial_, AMP_RX, AMP_TX, AMP_DETECT, INPUT_PULLDOWN, AMP_ANNOUNCE) {
 
 }
 

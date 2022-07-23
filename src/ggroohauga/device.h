@@ -28,13 +28,33 @@
 
 namespace ggroohauga {
 
+enum class LogicValue : int8_t {
+	Low = -1,
+	Unknown = 0,
+	High = 1,
+};
+
+inline int operator*(const LogicValue &value) {
+	return value == LogicValue::Low ? LOW : HIGH;
+}
+
+inline LogicValue& operator<<(LogicValue &lhs, const int &rhs) {
+	return lhs = (rhs == LOW ? LogicValue::Low : LogicValue::High);
+}
+
+inline int& operator<<(int &lhs, const LogicValue &rhs) {
+	return lhs = *rhs;
+}
+
 class Device {
 public:
 	static constexpr int BAUD_RATE = 57600;
 	static constexpr int UART_CONFIG = SERIAL_8O1;
 	static constexpr size_t MAX_MESSAGE_LEN = 259;
 
-	Device(const __FlashStringHelper *name, HardwareSerial &serial, int rx_pin, int tx_pin);
+	Device(const __FlashStringHelper *name, HardwareSerial &serial,
+		uint8_t rx_pin, uint8_t tx_pin, uint8_t detect_pin,
+		uint8_t detect_mode, uint8_t announce_pin);
 
 	void start();
 	void loop(Device &other);
@@ -46,10 +66,15 @@ private:
 
 	uuid::log::Logger logger_;
 	HardwareSerial &serial_;
-	int rx_pin_;
-	int tx_pin_;
+	uint8_t rx_pin_;
+	uint8_t tx_pin_;
+	uint8_t detect_pin_;
+	uint8_t detect_mode_;
+	uint8_t announce_pin_;
+
 	std::vector<uint8_t> buffer_;
 	unsigned long last_millis_;
+	LogicValue detect_ = LogicValue::Unknown;
 };
 
 } // namespace ggroohauga

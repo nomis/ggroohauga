@@ -26,18 +26,43 @@
 
 namespace ggroohauga {
 
-Device::Device(const __FlashStringHelper *name, HardwareSerial &serial, int rx_pin, int tx_pin)
-		: logger_(name, uuid::log::Facility::UUCP), serial_(serial), rx_pin_(rx_pin), tx_pin_(tx_pin) {
+Device::Device(const __FlashStringHelper *name, HardwareSerial &serial,
+		uint8_t rx_pin, uint8_t tx_pin, uint8_t detect_pin,
+		uint8_t detect_mode, uint8_t announce_pin)
+		: logger_(name, uuid::log::Facility::UUCP), serial_(serial),
+		rx_pin_(rx_pin), tx_pin_(tx_pin), detect_pin_(detect_pin),
+		detect_mode_(detect_mode), announce_pin_(announce_pin) {
 
 }
 
 void Device::start() {
 	serial_.begin(BAUD_RATE, UART_CONFIG, rx_pin_, tx_pin_);
+	pinMode(detect_pin_, detect_mode_);
 }
 
 void Device::loop(Device &other) {
 	unsigned long now_ms = millis();
 	int data = 0;
+	LogicValue detect;
+
+	detect << digitalRead(detect_pin_);
+
+	if (detect != detect_) {
+		digitalWrite(announce_pin_, *detect);
+		if (detect_ == LogicValue::Unknown) {
+			pinMode(announce_pin_, OUTPUT);
+		}
+
+		other.report();
+		report();
+
+		if (detect == LogicValue::High) {
+			logger_.trace(F("Pin %d -> %d: HIGH"), detect_pin_, announce_pin_);
+		} else {
+			logger_.trace(F("Pin %d -> %d: LOW"), detect_pin_, announce_pin_);
+		}
+		detect_ = detect;
+	}
 
 	do {
 		int available_rx = serial_.available();
