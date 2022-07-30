@@ -34,13 +34,14 @@ private:
 	static constexpr int CON_TX = 38;
 	static constexpr int CON_DETECT = 37;
 	static constexpr int CON_ANNOUNCE = 40;
-	static constexpr int CON_POWER = 15;
+	static constexpr int CON_POWER_OUT = 15;
 	static constexpr auto &con_serial_ = Serial0;
 
 	static constexpr int AMP_RX = 18;
 	static constexpr int AMP_TX = 17;
 	static constexpr int AMP_DETECT = 16;
 	static constexpr int AMP_ANNOUNCE = 21;
+	static constexpr int AMP_POWER_IN = 14;
 	static constexpr auto &amp_serial_ = Serial1;
 #else
 # error "Unknown board"

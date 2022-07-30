@@ -23,23 +23,30 @@
 namespace ggroohauga {
 
 App::App()
-		: con_(F("console"), con_serial_, CON_RX, CON_TX, CON_DETECT, INPUT_PULLUP, CON_ANNOUNCE),
-		amp_(F("amplifier"), amp_serial_, AMP_RX, AMP_TX, AMP_DETECT, INPUT_PULLDOWN, AMP_ANNOUNCE) {
+		: con_(F("console"), con_serial_, CON_RX, CON_TX,
+			{
+				Proxy(F("console"), F("detect"), CON_DETECT, LogicValue::Low, 0, 1000, F("announce"), CON_ANNOUNCE),
+			}),
+		amp_(F("amplifier"), amp_serial_, AMP_RX, AMP_TX,
+			{
+				Proxy(F("amplifier"), F("detect"), AMP_DETECT, LogicValue::High, 0, 0, F("announce"), AMP_ANNOUNCE),
+				Proxy(F("amplifier"), F("power-in"), AMP_POWER_IN, LogicValue::High, 50, 1000, F("power-out"), CON_POWER_OUT),
+			}) {
 
 }
 
 void App::start() {
 	app::App::start();
 
-	con_.start();
-	amp_.start();
+	con_.start(amp_);
+	amp_.start(con_);
 }
 
 void App::loop() {
 	app::App::loop();
 
-	con_.loop(amp_);
-	amp_.loop(con_);
+	con_.loop();
+	amp_.loop();
 }
 
 } // namespace ggroohauga
