@@ -38,6 +38,10 @@ App::App()
 void App::start() {
 	app::App::start();
 
+	// Turn LED off
+	digitalWrite(LED_PIN, LOW);
+	pinMode(LED_PIN, OUTPUT);
+
 	con_.start(amp_);
 	amp_.start(con_);
 }

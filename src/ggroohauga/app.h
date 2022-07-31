@@ -30,11 +30,13 @@ namespace ggroohauga {
 class App: public app::App {
 private:
 #if defined(ARDUINO_LOLIN_S2_MINI)
+	static constexpr int LED_PIN = 15;
+
 	static constexpr int CON_RX = 39;
 	static constexpr int CON_TX = 38;
 	static constexpr int CON_DETECT = 37;
 	static constexpr int CON_ANNOUNCE = 40;
-	static constexpr int CON_POWER_OUT = 15;
+	static constexpr int CON_POWER_OUT = 1;
 	static constexpr auto &con_serial_ = Serial0;
 
 	static constexpr int AMP_RX = 18;
