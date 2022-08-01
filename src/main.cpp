@@ -23,11 +23,11 @@
 static ggroohauga::App application;
 
 void setup() {
-    application.start();
+	application.start();
 }
 
 void loop() {
-    application.loop();
-    ::yield();
+	application.loop();
+	::yield();
 }
 
