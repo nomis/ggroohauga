@@ -70,10 +70,20 @@ void Device::loop() {
 				other_->report();
 			}
 
+			if (data == 0xAA
+					&& !buffer_.empty()
+					&& buffer_[0] != 0xAA) {
+				report();
+			}
+
 			buffer_.push_back(data);
 			other_->serial_.write(data);
 
 			if (buffer_.size() == MAX_MESSAGE_LEN) {
+				report();
+			} else if (buffer_.size() >= 4
+					&& buffer_[0] == 0xAA
+					&& buffer_.size() >= buffer_[2] + 4) {
 				report();
 			}
 
@@ -94,7 +104,7 @@ void Device::report_both() {
 
 void Device::report() {
 	if (logger_.enabled(uuid::log::Level::TRACE)) {
-		static constexpr uint8_t BYTES_PER_LINE = 16;
+		static constexpr uint8_t BYTES_PER_LINE = 24;
 		static constexpr uint8_t CHARS_PER_BYTE = 3;
 		std::array<char, CHARS_PER_BYTE * BYTES_PER_LINE + 1> message{};
 		uint8_t pos = 0;
