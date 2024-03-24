@@ -1,6 +1,6 @@
 /*
  * ggroohauga - Alternative console and simulated amplifier interface
- * Copyright 2022  Simon Arlott
+ * Copyright 2022,2024  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ public:
 	~GgroohaugaShell() override = default;
 
 protected:
-	GgroohaugaShell(app::App &app);
+	GgroohaugaShell(app::App &app, Stream &stream, unsigned int context, unsigned int flags);
 
 	void display_banner() override;
 };

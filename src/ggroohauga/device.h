@@ -24,7 +24,7 @@
 
 #include <uuid/log.h>
 
-#include "../app/app.h"
+#include "app/app.h"
 
 namespace ggroohauga {
 

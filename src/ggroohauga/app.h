@@ -22,7 +22,7 @@
 
 #include <vector>
 
-#include "../app/app.h"
+#include "app/app.h"
 #include "device.h"
 
 namespace ggroohauga {

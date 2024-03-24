@@ -50,12 +50,16 @@ namespace ggroohauga {
 #pragma GCC diagnostic error "-Wunused-const-variable"
 #pragma GCC diagnostic pop
 
-static inline App &to_app(Shell &shell) {
-	return static_cast<App&>(dynamic_cast<app::AppShell&>(shell).app_);
+static constexpr inline AppShell &to_app_shell(Shell &shell) {
+	return static_cast<AppShell&>(shell);
 }
 
-static inline GgroohaugaShell &to_shell(Shell &shell) {
-	return dynamic_cast<GgroohaugaShell&>(shell);
+static constexpr inline App &to_app(Shell &shell) {
+	return static_cast<App&>(to_app_shell(shell).app_);
+}
+
+static constexpr inline GgroohaugaShell &to_shell(Shell &shell) {
+	return static_cast<GgroohaugaShell&>(shell);
 }
 
 #define NO_ARGUMENTS std::vector<std::string>{}
@@ -64,7 +68,8 @@ static inline void setup_commands(std::shared_ptr<Commands> &commands) {
 
 }
 
-GgroohaugaShell::GgroohaugaShell(app::App &app) : Shell(), AppShell(app) {
+GgroohaugaShell::GgroohaugaShell(app::App &app, Stream &stream, unsigned int context, unsigned int flags)
+	: AppShell(app, stream, context, flags) {
 
 }
 
