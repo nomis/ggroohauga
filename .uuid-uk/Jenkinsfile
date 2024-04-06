@@ -1,3 +1,5 @@
 @Library("uuid") _
 
-platformioApplicationPipeline()
+platformioApplicationPipeline{
+	pio_version = "6.1.5"
+}
