@@ -4,7 +4,7 @@ Logitech® Z906 Surround Sound Speakers
 Overview
 --------
 
-Alternative console and simulated amplifier interface for the ESP32-S2
+Alternative console and simulated amplifier interface for the ESP32-S3
 microcontroller interacting with Logitech® Z906 Surround Sound Speakers.
 
 Purpose
@@ -18,6 +18,11 @@ Related Documentation
 ---------------------
 
 * `Console firmware/interface/protocol <https://github.com/nomis/logitech-z906>`_
+
+Related Hardware
+---------------------
+
+* `PCB to interface with the console/amplifier <https://github.com/nomis/ggroohauga-pcb>`_
 
 Notices
 -------
