@@ -1,6 +1,6 @@
 /*
  * ggroohauga - Alternative console and simulated amplifier interface
- * Copyright 2022  Simon Arlott
+ * Copyright 2022,2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,7 +98,7 @@ public:
 		const __FlashStringHelper *src_name, uint8_t src_pin,
 		LogicValue on_state, unsigned long debounce_on_millis,
 		unsigned long hold_off_millis, const __FlashStringHelper *dst_name,
-		uint8_t dst_pin);
+		uint8_t dst_pin, bool invert);
 
 	void start(Device *device = nullptr) override;
 	void loop() override;
@@ -117,6 +117,7 @@ private:
 	const LogicValue on_state_;
 	const unsigned long debounce_on_millis_;
 	const unsigned long hold_off_millis_;
+	const bool invert_;
 	LogicValue dst_value_ = LogicValue::Unknown;
 	bool on_pending_ = false;
 	bool hold_ = false;

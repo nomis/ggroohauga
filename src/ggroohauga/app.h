@@ -1,6 +1,6 @@
 /*
  * ggroohauga - Alternative console and simulated amplifier interface
- * Copyright 2022  Simon Arlott
+ * Copyright 2022,2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,21 +29,53 @@ namespace ggroohauga {
 
 class App: public app::App {
 private:
-#if defined(ARDUINO_LOLIN_S2_MINI)
-	static constexpr int LED_PIN = 15;
+#if defined(ARDUINO_LOLIN_S3)
+	static constexpr int LED_PIN = 38;
 
-	static constexpr int CON_RX = 39;
-	static constexpr int CON_TX = 38;
-	static constexpr int CON_DETECT = 37;
-	static constexpr int CON_ANNOUNCE = 40;
-	static constexpr int CON_POWER_OUT = 1;
+	static constexpr int CON_RX = 4; /* MCU TX (Console RX) */
+	static constexpr int CON_TX = 6; /* MCU RX (Console TX) */
+	static constexpr int CON_DETECT = 17;
+	static constexpr int CON_ANNOUNCE = 48; /* no glitches on power cycle */
+	static constexpr int CON_POWER_OUT = 40; /* no glitches on power cycle */
 	static constexpr auto &con_serial_ = Serial0;
 
-	static constexpr int AMP_RX = 18;
-	static constexpr int AMP_TX = 17;
-	static constexpr int AMP_DETECT = 16;
-	static constexpr int AMP_ANNOUNCE = 21;
-	static constexpr int AMP_POWER_IN = 14;
+	static constexpr int AMP_RX = 10; /* MCU TX (Amplifier RX) */
+	static constexpr int AMP_TX = 9; /* MCU RX (Amplifier TX) */
+	static constexpr int AMP_DETECT = 14;
+	static constexpr int AMP_ANNOUNCE = 13;
+	static constexpr int AMP_POWER_IN = 8;
+	static constexpr auto &amp_serial_ = Serial1;
+#elif defined(ARDUINO_ESP_S3_DEVKITC)
+	static constexpr int LED_PIN = 38;
+
+	static constexpr int CON_RX = 4; /* MCU TX (Console RX) */
+	static constexpr int CON_TX = 6; /* MCU RX (Console TX) */
+	static constexpr int CON_DETECT = 17;
+	static constexpr int CON_ANNOUNCE = 35; /* no glitches on power cycle */
+	static constexpr int CON_POWER_OUT = 40; /* no glitches on power cycle */
+	static constexpr auto &con_serial_ = Serial;
+
+	static constexpr int AMP_RX = 10; /* MCU TX (Amplifier RX) */
+	static constexpr int AMP_TX = 9; /* MCU RX (Amplifier TX) */
+	static constexpr int AMP_DETECT = 48;
+	static constexpr int AMP_ANNOUNCE = 47;
+	static constexpr int AMP_POWER_IN = 8;
+	static constexpr auto &amp_serial_ = Serial1;
+#elif defined(ARDUINO_ESP_S3_DEVKITM)
+	static constexpr int LED_PIN = 48;
+
+	static constexpr int CON_RX = 2; /* MCU TX (Console RX) */
+	static constexpr int CON_TX = 4; /* MCU RX (Console TX) */
+	static constexpr int CON_DETECT = 8;
+	static constexpr int CON_ANNOUNCE = 36; /* no glitches on power cycle */
+	static constexpr int CON_POWER_OUT = 41; /* no glitches on power cycle */
+	static constexpr auto &con_serial_ = Serial;
+
+	static constexpr int AMP_RX = 14; /* MCU TX (Amplifier RX) */
+	static constexpr int AMP_TX = 13; /* MCU RX (Amplifier TX) */
+	static constexpr int AMP_DETECT = 33;
+	static constexpr int AMP_ANNOUNCE = 26;
+	static constexpr int AMP_POWER_IN = 10;
 	static constexpr auto &amp_serial_ = Serial1;
 #else
 # error "Unknown board"

@@ -1,6 +1,6 @@
 /*
  * ggroohauga - Alternative console and simulated amplifier interface
- * Copyright 2022  Simon Arlott
+ * Copyright 2022,2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -156,13 +156,14 @@ Proxy::Proxy(const __FlashStringHelper *name,
 		const __FlashStringHelper *src_name, uint8_t src_pin,
 		LogicValue on_state, unsigned long debounce_on_millis,
 		unsigned long hold_off_millis, const __FlashStringHelper *dst_name,
-		uint8_t dst_pin)
+		uint8_t dst_pin, bool invert)
 		: Monitor(name, src_pin,
 				on_state == LogicValue::High ? INPUT_PULLDOWN : INPUT_PULLUP),
 			src_name_(src_name), dst_name_(dst_name), src_pin_(src_pin),
 			dst_pin_(dst_pin), on_state_(on_state),
 			debounce_on_millis_(debounce_on_millis),
-			hold_off_millis_(hold_off_millis) {
+			hold_off_millis_(hold_off_millis),
+			invert_(invert) {
 
 }
 
@@ -216,16 +217,19 @@ void Proxy::changed(LogicValue value) {
 }
 
 void Proxy::update(LogicValue value) {
-	if (dst_value_ != value) {
-		digitalWrite(dst_pin_, *value);
+	LogicValue output_value = invert_ ? !value : value;
+
+	if (dst_value_ != output_value) {
+		digitalWrite(dst_pin_, *output_value);
 		if (dst_value_ == LogicValue::Unknown) {
 			pinMode(dst_pin_, OUTPUT);
 		}
-		dst_value_ = value;
+		dst_value_ = output_value;
 
-		logger_.trace(F("Pin %d (%S) -> %d (%S): %S (%S)"),
+		logger_.trace(F("Pin %d (%S) -> %d (%S): %S (%S -> %S)"),
 			src_pin_, src_name_, dst_pin_, dst_name_,
-			value == on_state_ ? F("on") : F("off"), to_string(value));
+			value == on_state_ ? F("on") : F("off"),
+			to_string(value), to_string(output_value));
 	} else {
 		log(value);
 	}

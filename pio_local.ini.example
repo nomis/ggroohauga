@@ -1,3 +1,11 @@
-[env:s2_mini]
+[env:s3_lolin]
 build_src_flags = ${env.build_src_flags}
-	-DOTA_URL="\"https://ota.test/ggroohauga/s2_mini/firmware.bin\""
+	-DOTA_URL="\"https://ota.test/ggroohauga/s3_lolin/firmware.bin\""
+
+[env:s3_devkitc]
+build_src_flags = ${env.build_src_flags}
+	-DOTA_URL="\"https://ota.test/ggroohauga/s3_devkitc/firmware.bin\""
+
+[env:s3_devkitm]
+build_src_flags = ${env.build_src_flags}
+	-DOTA_URL="\"https://ota.test/ggroohauga/s3_devkitm/firmware.bin\""

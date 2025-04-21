@@ -1,6 +1,6 @@
 /*
  * ggroohauga - Alternative console and simulated amplifier interface
- * Copyright 2022  Simon Arlott
+ * Copyright 2022,2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,24 +23,20 @@
 namespace ggroohauga {
 
 App::App()
-		: con_(F("console"), con_serial_, CON_RX, CON_TX,
+		: con_(F("console"), con_serial_, CON_TX, CON_RX,
 			{
-				Proxy(F("console"), F("detect"), CON_DETECT, LogicValue::Low, 0, 1000, F("announce"), CON_ANNOUNCE),
+				Proxy(F("console"), F("detect"), CON_DETECT, LogicValue::Low, 0, 1000, F("announce"), CON_ANNOUNCE, false),
 			}),
-		amp_(F("amplifier"), amp_serial_, AMP_RX, AMP_TX,
+		amp_(F("amplifier"), amp_serial_, AMP_TX, AMP_RX,
 			{
-				Proxy(F("amplifier"), F("detect"), AMP_DETECT, LogicValue::High, 0, 0, F("announce"), AMP_ANNOUNCE),
-				Proxy(F("amplifier"), F("power-in"), AMP_POWER_IN, LogicValue::High, 50, 1000, F("power-out"), CON_POWER_OUT),
+				Proxy(F("amplifier"), F("detect"), AMP_DETECT, LogicValue::High, 0, 0, F("announce"), AMP_ANNOUNCE, false),
+				Proxy(F("amplifier"), F("power-in"), AMP_POWER_IN, LogicValue::High, 50, 1000, F("power-out"), CON_POWER_OUT, true),
 			}) {
 
 }
 
 void App::start() {
 	app::App::start();
-
-	// Turn LED off
-	digitalWrite(LED_PIN, LOW);
-	pinMode(LED_PIN, OUTPUT);
 
 	con_.start(amp_);
 	amp_.start(con_);
