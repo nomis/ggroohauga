@@ -37,14 +37,14 @@ private:
 	static constexpr int CON_DETECT = 17;
 	static constexpr int CON_ANNOUNCE = 48; /* no glitches on power cycle */
 	static constexpr int CON_POWER_OUT = 40; /* no glitches on power cycle */
-	static constexpr auto &con_serial_ = Serial0;
+	static constexpr auto &con_serial_ = Serial1;
 
 	static constexpr int AMP_RX = 10; /* MCU TX (Amplifier RX) */
 	static constexpr int AMP_TX = 9; /* MCU RX (Amplifier TX) */
 	static constexpr int AMP_DETECT = 14;
 	static constexpr int AMP_ANNOUNCE = 13;
 	static constexpr int AMP_POWER_IN = 8;
-	static constexpr auto &amp_serial_ = Serial1;
+	static constexpr auto &amp_serial_ = Serial2;
 #elif defined(ARDUINO_ESP_S3_DEVKITC)
 	static constexpr int LED_PIN = 38;
 
@@ -53,14 +53,14 @@ private:
 	static constexpr int CON_DETECT = 17;
 	static constexpr int CON_ANNOUNCE = 35; /* no glitches on power cycle */
 	static constexpr int CON_POWER_OUT = 40; /* no glitches on power cycle */
-	static constexpr auto &con_serial_ = Serial;
+	static constexpr auto &con_serial_ = Serial1;
 
 	static constexpr int AMP_RX = 10; /* MCU TX (Amplifier RX) */
 	static constexpr int AMP_TX = 9; /* MCU RX (Amplifier TX) */
 	static constexpr int AMP_DETECT = 48;
 	static constexpr int AMP_ANNOUNCE = 47;
 	static constexpr int AMP_POWER_IN = 8;
-	static constexpr auto &amp_serial_ = Serial1;
+	static constexpr auto &amp_serial_ = Serial2;
 #elif defined(ARDUINO_ESP_S3_DEVKITM)
 	static constexpr int LED_PIN = 48;
 
@@ -69,14 +69,14 @@ private:
 	static constexpr int CON_DETECT = 8;
 	static constexpr int CON_ANNOUNCE = 36; /* no glitches on power cycle */
 	static constexpr int CON_POWER_OUT = 41; /* no glitches on power cycle */
-	static constexpr auto &con_serial_ = Serial;
+	static constexpr auto &con_serial_ = Serial1;
 
 	static constexpr int AMP_RX = 14; /* MCU TX (Amplifier RX) */
 	static constexpr int AMP_TX = 13; /* MCU RX (Amplifier TX) */
 	static constexpr int AMP_DETECT = 33;
 	static constexpr int AMP_ANNOUNCE = 26;
 	static constexpr int AMP_POWER_IN = 10;
-	static constexpr auto &amp_serial_ = Serial1;
+	static constexpr auto &amp_serial_ = Serial2;
 #else
 # error "Unknown board"
 #endif
