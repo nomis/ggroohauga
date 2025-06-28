@@ -20,6 +20,7 @@
 
 #include <Arduino.h>
 
+#include <functional>
 #include <vector>
 
 #include <uuid/log.h>
@@ -77,7 +78,12 @@ public:
 	Monitor(const __FlashStringHelper *name, uint8_t pin, uint8_t mode);
 	virtual ~Monitor() = default;
 
+	Monitor(const Monitor&) = delete;
+	Monitor& operator=(const Monitor&) = delete;
+
 	virtual void start(Device *device = nullptr);
+	virtual void activate();
+	virtual void deactivate();
 	virtual void loop();
 
 protected:
@@ -89,6 +95,7 @@ protected:
 private:
 	const uint8_t pin_;
 	const uint8_t mode_;
+	bool suspend_ = true;
 	LogicValue value_ = LogicValue::Unknown;
 };
 
@@ -98,9 +105,15 @@ public:
 		const __FlashStringHelper *src_name, uint8_t src_pin,
 		LogicValue on_state, unsigned long debounce_on_millis,
 		unsigned long hold_off_millis, const __FlashStringHelper *dst_name,
-		uint8_t dst_pin, bool invert);
+		uint8_t dst_pin, bool invert,
+		std::function<void(bool)> change_func);
+
+	Proxy(const Proxy&) = delete;
+	Proxy& operator=(const Proxy&) = delete;
 
 	void start(Device *device = nullptr) override;
+	void activate() override;
+	void deactivate() override;
 	void loop() override;
 
 protected:
@@ -118,11 +131,13 @@ private:
 	const unsigned long debounce_on_millis_;
 	const unsigned long hold_off_millis_;
 	const bool invert_;
+	bool suspend_ = true;
 	LogicValue dst_value_ = LogicValue::Unknown;
 	bool on_pending_ = false;
 	bool hold_ = false;
 	unsigned long debounce_start_millis_;
 	unsigned long hold_start_millis_;
+	std::function<void(bool)> change_func_;
 };
 
 class Device {
@@ -132,9 +147,15 @@ public:
 	static constexpr size_t MAX_MESSAGE_LEN = 259;
 
 	Device(const __FlashStringHelper *name, HardwareSerial &serial,
-		uint8_t rx_pin, uint8_t tx_pin, const std::vector<Proxy> &proxies);
+		uint8_t rx_pin, uint8_t tx_pin, bool wait,
+		const std::vector<std::reference_wrapper<Proxy>> &proxies);
+
+	Device(const Device&) = delete;
+	Device& operator=(const Device&) = delete;
 
 	void start(Device &other);
+	void activate();
+	void deactivate();
 	void loop();
 	void report_both();
 
@@ -145,11 +166,14 @@ private:
 
 	uuid::log::Logger logger_;
 	HardwareSerial &serial_;
-	uint8_t rx_pin_;
-	uint8_t tx_pin_;
-	std::vector<Proxy> proxies_;
+	const uint8_t rx_pin_;
+	const uint8_t tx_pin_;
+	const bool wait_for_other_;
+	std::vector<std::reference_wrapper<Proxy>> proxies_;
 	Device *other_;
+	bool waiting_;
 
+	bool suspend_ = true;
 	std::vector<uint8_t> buffer_;
 	unsigned long last_millis_;
 };

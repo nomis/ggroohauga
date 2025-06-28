@@ -88,7 +88,13 @@ public:
 	void loop() override;
 
 private:
+	void power_on();
+	void power_off();
+
+	Proxy con_detect_;
 	Device con_;
+	Proxy amp_detect_;
+	Proxy power_;
 	Device amp_;
 };
 

@@ -20,6 +20,7 @@
 
 #include <Arduino.h>
 
+#include <functional>
 #include <vector>
 
 #include <uuid/log.h>
@@ -27,19 +28,40 @@
 namespace ggroohauga {
 
 Device::Device(const __FlashStringHelper *name, HardwareSerial &serial,
-		uint8_t rx_pin, uint8_t tx_pin, const std::vector<Proxy> &proxies)
+		uint8_t rx_pin, uint8_t tx_pin, bool wait,
+		const std::vector<std::reference_wrapper<Proxy>> &proxies)
 		: logger_(name, uuid::log::Facility::UUCP), serial_(serial),
-		rx_pin_(rx_pin), tx_pin_(tx_pin), proxies_(proxies) {
+		rx_pin_(rx_pin), tx_pin_(tx_pin), wait_for_other_(wait),
+		proxies_(proxies) {
 
 }
 
 void Device::start(Device &other) {
 	other_ = &other;
-
-	serial_.begin(BAUD_RATE, UART_CONFIG, rx_pin_, tx_pin_);
+	waiting_ = wait_for_other_;
 
 	for (auto &proxy : proxies_) {
-		proxy.start(this);
+		proxy.get().start(this);
+	}
+}
+
+void Device::activate() {
+	if (suspend_) {
+		suspend_ = false;
+
+		logger_.trace(F("Activate serial"));
+		serial_.begin(BAUD_RATE, UART_CONFIG, rx_pin_, tx_pin_);
+		waiting_ = wait_for_other_;
+	}
+}
+
+void Device::deactivate() {
+	if (!suspend_) {
+		suspend_ = true;
+
+		logger_.trace(F("Deactivate serial"));
+		serial_.end();
+		buffer_.clear();
 	}
 }
 
@@ -48,7 +70,11 @@ void Device::loop() {
 	int data = 0;
 
 	for (auto &proxy : proxies_) {
-		proxy.loop();
+		proxy.get().loop();
+	}
+
+	if (suspend_) {
+		return;
 	}
 
 	do {
@@ -77,7 +103,10 @@ void Device::loop() {
 			}
 
 			buffer_.push_back(data);
-			other_->serial_.write(data);
+			if (!waiting_) {
+				other_->serial_.write(data);
+				other_->waiting_ = false;
+			}
 
 			if (buffer_.size() == MAX_MESSAGE_LEN) {
 				report();
@@ -114,7 +143,8 @@ void Device::report() {
 				PSTR(" %02X"), buffer_[i]);
 
 			if (pos == BYTES_PER_LINE || i == buffer_.size() - 1) {
-				logger_.trace(F("%s"), &message.data()[1]);
+				logger_.trace(F("%s%S"), &message.data()[1],
+					waiting_ ? F(" [discarded]") : F(""));
 				pos = 0;
 			}
 		}
@@ -130,7 +160,21 @@ Monitor::Monitor(const __FlashStringHelper *name, uint8_t pin, uint8_t mode)
 
 void Monitor::start(Device *device) {
 	device_ = device;
-	pinMode(pin_, mode_);
+	pinMode(pin_, INPUT);
+}
+
+void Monitor::activate() {
+	if (suspend_) {
+		suspend_ = false;
+		pinMode(pin_, mode_);
+	}
+}
+
+void Monitor::deactivate() {
+	if (!suspend_) {
+		suspend_ = true;
+		pinMode(pin_, INPUT);
+	}
 }
 
 void Monitor::loop() {
@@ -156,21 +200,66 @@ Proxy::Proxy(const __FlashStringHelper *name,
 		const __FlashStringHelper *src_name, uint8_t src_pin,
 		LogicValue on_state, unsigned long debounce_on_millis,
 		unsigned long hold_off_millis, const __FlashStringHelper *dst_name,
-		uint8_t dst_pin, bool invert)
+		uint8_t dst_pin, bool invert, std::function<void(bool)> change_func)
 		: Monitor(name, src_pin,
 				on_state == LogicValue::High ? INPUT_PULLDOWN : INPUT_PULLUP),
 			src_name_(src_name), dst_name_(dst_name), src_pin_(src_pin),
 			dst_pin_(dst_pin), on_state_(on_state),
 			debounce_on_millis_(debounce_on_millis),
 			hold_off_millis_(hold_off_millis),
-			invert_(invert) {
+			invert_(invert), change_func_(change_func) {
 
 }
 
 void Proxy::start(Device *device) {
 	Monitor::start(device);
-	digitalWrite(dst_pin_, !*on_state_);
-	pinMode(dst_pin_, OUTPUT);
+	pinMode(dst_pin_, INPUT);
+}
+
+void Proxy::activate() {
+	Monitor::activate();
+
+	if (suspend_) {
+		suspend_ = false;
+
+		logger_.trace(F("Activate pin %d (%S) -> %d (%S)"),
+				src_pin_, src_name_, dst_pin_, dst_name_);
+
+		if (dst_value_ != LogicValue::Unknown) {
+			LogicValue input_value = invert_ ? !dst_value_ : dst_value_;
+
+			digitalWrite(dst_pin_, *dst_value_);
+			pinMode(dst_pin_, OUTPUT);
+
+			logger_.trace(F("Pin %d (%S) -> %d (%S): %S (%S -> %S) [unsuspended]"),
+				src_pin_, src_name_, dst_pin_, dst_name_,
+				input_value == on_state_ ? F("on") : F("off"),
+				to_string(input_value), to_string(dst_value_));
+
+			if (input_value == on_state_ && change_func_) {
+				change_func_(true);
+			}
+		}
+	}
+}
+
+void Proxy::deactivate() {
+	if (!suspend_) {
+		LogicValue input_value = invert_ ? !dst_value_ : dst_value_;
+
+		suspend_ = true;
+
+		logger_.trace(F("Deactivate pin %d (%S) -> %d (%S)"),
+				src_pin_, src_name_, dst_pin_, dst_name_);
+
+		pinMode(dst_pin_, INPUT);
+
+		if (input_value == on_state_ && change_func_) {
+			change_func_(false);
+		}
+	}
+
+	Monitor::deactivate();
 }
 
 void Proxy::loop() {
@@ -220,16 +309,34 @@ void Proxy::update(LogicValue value) {
 	LogicValue output_value = invert_ ? !value : value;
 
 	if (dst_value_ != output_value) {
-		digitalWrite(dst_pin_, *output_value);
-		if (dst_value_ == LogicValue::Unknown) {
-			pinMode(dst_pin_, OUTPUT);
-		}
+		bool suspended = suspend_;
+
 		dst_value_ = output_value;
 
-		logger_.trace(F("Pin %d (%S) -> %d (%S): %S (%S -> %S)"),
-			src_pin_, src_name_, dst_pin_, dst_name_,
-			value == on_state_ ? F("on") : F("off"),
-			to_string(value), to_string(output_value));
+		if (!suspend_ && value != on_state_ && change_func_) {
+			change_func_(false);
+		}
+
+		if (suspend_) {
+			logger_.trace(F("Pin %d (%S) -> %d (%S): %S (%S -> %S) [suspended]"),
+				src_pin_, src_name_, dst_pin_, dst_name_,
+				value == on_state_ ? F("on") : F("off"),
+				to_string(value), to_string(output_value));
+		} else {
+			if (!suspended) {
+				digitalWrite(dst_pin_, *output_value);
+				pinMode(dst_pin_, OUTPUT);
+
+				logger_.trace(F("Pin %d (%S) -> %d (%S): %S (%S -> %S)"),
+					src_pin_, src_name_, dst_pin_, dst_name_,
+					value == on_state_ ? F("on") : F("off"),
+					to_string(value), to_string(output_value));
+			}
+
+			if (value == on_state_ && change_func_) {
+				change_func_(true);
+			}
+		}
 	} else {
 		log(value);
 	}

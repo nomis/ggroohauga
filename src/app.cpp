@@ -23,16 +23,20 @@
 namespace ggroohauga {
 
 App::App()
-		: con_(F("console"), con_serial_, CON_TX, CON_RX,
-			{
-				Proxy(F("console"), F("detect"), CON_DETECT, LogicValue::Low, 0, 1000, F("announce"), CON_ANNOUNCE, false),
+		: con_detect_(F("console"), F("detect"), CON_DETECT, LogicValue::Low,
+			5, 5, F("announce"), CON_ANNOUNCE, false, {}),
+		con_(F("console"), con_serial_, CON_TX, CON_RX, false, { con_detect_ }),
+		amp_detect_(F("amplifier"), F("detect"), AMP_DETECT, LogicValue::Low,
+			0, 0, F("announce"), AMP_ANNOUNCE, false, {}),
+		power_(F("amplifier"), F("power-in"), AMP_POWER_IN, LogicValue::High,
+			5, 5, F("power-out"), CON_POWER_OUT, true, [this] (bool on) {
+				if (on) {
+					power_on();
+				} else {
+					power_off();
+				}
 			}),
-		amp_(F("amplifier"), amp_serial_, AMP_TX, AMP_RX,
-			{
-				Proxy(F("amplifier"), F("detect"), AMP_DETECT, LogicValue::High, 0, 0, F("announce"), AMP_ANNOUNCE, false),
-				Proxy(F("amplifier"), F("power-in"), AMP_POWER_IN, LogicValue::High, 50, 1000, F("power-out"), CON_POWER_OUT, true),
-			}) {
-
+		amp_(F("amplifier"), amp_serial_, AMP_TX, AMP_RX, true, { amp_detect_, power_ }) {
 }
 
 void App::start() {
@@ -40,6 +44,7 @@ void App::start() {
 
 	con_.start(amp_);
 	amp_.start(con_);
+	power_.activate();
 }
 
 void App::loop() {
@@ -48,5 +53,20 @@ void App::loop() {
 	con_.loop();
 	amp_.loop();
 }
+
+void App::power_on() {
+	amp_.activate();
+	amp_detect_.activate();
+	con_.activate();
+	con_detect_.activate();
+}
+
+void App::power_off() {
+	con_detect_.deactivate();
+	con_.deactivate();
+	amp_detect_.deactivate();
+	amp_.deactivate();
+}
+
 
 } // namespace ggroohauga
