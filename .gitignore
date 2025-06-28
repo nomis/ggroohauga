@@ -1,3 +1,4 @@
 /.cache/
 /.pio/
 /pio_local.ini
+/compile_commands.json
