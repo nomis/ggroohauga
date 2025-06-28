@@ -19,6 +19,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <Adafruit_NeoPixel.h>
 
 #include <vector>
 
@@ -96,6 +97,9 @@ private:
 	Proxy amp_detect_;
 	Proxy power_;
 	Device amp_;
+
+	Adafruit_NeoPixel led_{1, LED_PIN, NEO_GRB | NEO_KHZ800};
+	unsigned long last_led_ms_{0};
 };
 
 } // namespace ggroohauga

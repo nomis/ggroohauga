@@ -45,6 +45,7 @@ void App::start() {
 	con_.start(amp_);
 	amp_.start(con_);
 	power_.activate();
+	led_.begin();
 }
 
 void App::loop() {
@@ -52,6 +53,11 @@ void App::loop() {
 
 	con_.loop();
 	amp_.loop();
+
+	if (millis() - last_led_ms_ >= 1000) {
+		led_.show();
+		last_led_ms_ = millis();
+	}
 }
 
 void App::power_on() {
