@@ -160,12 +160,21 @@ Monitor::Monitor(const __FlashStringHelper *name, uint8_t pin, uint8_t mode)
 
 void Monitor::start(Device *device) {
 	device_ = device;
+	logger_.trace(F("Pin %d: high-impedance"), pin_);
 	pinMode(pin_, INPUT);
 }
 
 void Monitor::activate() {
 	if (suspend_) {
 		suspend_ = false;
+
+		if (mode_ == INPUT_PULLUP) {
+			logger_.trace(F("Pin %d: pull-up"), pin_);
+		} else if (mode_ == INPUT_PULLDOWN) {
+			logger_.trace(F("Pin %d: pull-down"), pin_);
+		} else {
+			logger_.trace(F("Pin %d: high-impedance"), pin_);
+		}
 		pinMode(pin_, mode_);
 	}
 }
@@ -173,12 +182,18 @@ void Monitor::activate() {
 void Monitor::deactivate() {
 	if (!suspend_) {
 		suspend_ = true;
+		value_ = LogicValue::Unknown;
+		logger_.trace(F("Pin %d: high-impedance"), pin_);
 		pinMode(pin_, INPUT);
 	}
 }
 
 void Monitor::loop() {
 	LogicValue value;
+
+	if (suspend_) {
+		return;
+	}
 
 	value << digitalRead(pin_);
 
@@ -257,6 +272,8 @@ void Proxy::deactivate() {
 		if (input_value == on_state_ && change_func_) {
 			change_func_(false);
 		}
+
+		dst_value_ = LogicValue::Unknown;
 	}
 
 	Monitor::deactivate();

@@ -44,6 +44,8 @@ void App::start() {
 
 	con_.start(amp_);
 	amp_.start(con_);
+	amp_.activate();
+	amp_detect_.activate();
 	power_.activate();
 	led_.begin();
 }
@@ -61,8 +63,6 @@ void App::loop() {
 }
 
 void App::power_on() {
-	amp_.activate();
-	amp_detect_.activate();
 	con_.activate();
 	con_detect_.activate();
 }
@@ -70,8 +70,6 @@ void App::power_on() {
 void App::power_off() {
 	con_detect_.deactivate();
 	con_.deactivate();
-	amp_detect_.deactivate();
-	amp_.deactivate();
 }
 
 

@@ -18,6 +18,7 @@
 
 #include <Arduino.h>
 
+#include "esp32-hal.h"
 #include "ggroohauga/app.h"
 
 static ggroohauga::App application;
@@ -30,4 +31,3 @@ void loop() {
 	application.loop();
 	::yield();
 }
-
